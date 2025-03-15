@@ -1,12 +1,10 @@
+import "package:beleza/tela_principal.dart";
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:teste/tela_principal.dart';
+import 'package:beleza/tela_principal.dart';
 import 'cadastro.dart';
 
 void main() {
-  // Adicione a linha abaixo para remover o debug banner
   WidgetsFlutterBinding.ensureInitialized();
-  debugPaintSizeEnabled = false; // Desabilita a pintura de depuração
   runApp(MyApp());
 }
 
@@ -14,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Remove a imagem de debug
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Login',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -33,10 +31,12 @@ class _MainScreenState extends State<MainScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // Função para realizar o login
   void _login() {
     String nome = _usernameController.text;
     String senha = _passwordController.text;
 
+    // Instanciando a classe AuthService
     AuthService().login(nome, senha).then((isAuthenticated) {
       if (isAuthenticated) {
         Navigator.pushReplacement(
@@ -61,21 +61,20 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  void _goToForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ForgotPasswordScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF64B5F6),
         centerTitle: true,
-        title: Text(
-          "Espaço Beleza",
-          style: TextStyle(
-            color: Colors.white, // Cor do texto
-            fontSize: 24, // Tamanho da fonte
-            fontWeight: FontWeight.bold, // Negrito
-            fontFamily: 'Roboto', // Fonte personalizada (se disponível)
-          ),
-        ),
+        title: Text("Espaço Beleza", style: TextStyle(color: Colors.white)),
         leading: Padding(
           padding: EdgeInsets.all(8.0),
           child: Image.asset('assets/images/lotus1.png'),
@@ -86,10 +85,7 @@ class _MainScreenState extends State<MainScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,       // Cor no topo
-              Colors.lightBlue[200]!, // Azul claro
-            ],
+            colors: [Colors.white, Colors.lightBlue[100] ?? Colors.lightBlue],
           ),
         ),
         child: Padding(
@@ -108,7 +104,7 @@ class _MainScreenState extends State<MainScreen> {
                 decoration: InputDecoration(
                   labelText: 'Nome',
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.8), // Fundo dos campos
+                  fillColor: Colors.white.withOpacity(0.8),
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -139,6 +135,112 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 child: Text('Cadastrar'),
               ),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: _goToForgotPassword,
+                child: Text(
+                  'Esqueci a Senha',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ForgotPasswordScreen extends StatefulWidget {
+  @override
+  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _isSubmitting = false;
+
+  void _submitRequest() {
+    String newPassword = _newPasswordController.text;
+    String confirmPassword = _confirmPasswordController.text;
+
+    if (newPassword.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Por favor, insira as senhas!')));
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('As senhas não coincidem!')));
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    Future.delayed(Duration(seconds: 2), () {
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Senha redefinida com sucesso!')),
+      );
+
+      Navigator.pop(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF64B5F6),
+        centerTitle: true,
+        title: Text('Redefinir Senha', style: TextStyle(color: Colors.white)),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.lightBlue[100] ?? Colors.lightBlue],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _newPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Nova Senha',
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.8),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Confirmar Senha',
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.8),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitRequest,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white, backgroundColor: Colors.blue,
+                ),
+                child: _isSubmitting ? CircularProgressIndicator() : Text('Salvar'),
+              ),
             ],
           ),
         ),
@@ -149,6 +251,7 @@ class _MainScreenState extends State<MainScreen> {
 
 class AuthService {
   Future<bool> login(String username, String password) async {
+    // Lógica fictícia para autenticação
     if (username == 'user' && password == '1234') {
       return Future.value(true);
     }

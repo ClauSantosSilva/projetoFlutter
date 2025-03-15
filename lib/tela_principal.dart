@@ -1,9 +1,15 @@
-import 'dart:io';
+import 'dart:io'; // Apenas para Android/iOS
 
+import 'package:beleza/tela_servico.dart';
 import 'package:flutter/material.dart';
-import 'package:teste/agenda.dart';
-import 'package:teste/cliente.dart';
-import 'package:teste/tela_servico.dart';
+import 'package:beleza/agenda.dart';
+import 'package:beleza/cliente.dart';
+import 'package:beleza/tela_servico.dart';
+import 'package:beleza/orcamento.dart';
+
+import 'agenda.dart';
+import 'cliente.dart';
+import 'orcamento.dart';
 
 class TelaPrincipal extends StatelessWidget {
   @override
@@ -30,7 +36,7 @@ class TelaPrincipal extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.white, Colors.lightBlue[200]!], // Degradê do branco para o azul
+                colors: [Colors.white, Colors.lightBlue[100]!], // Degradê do branco para o azul
               ),
             ),
           ),
@@ -49,14 +55,16 @@ class TelaPrincipal extends StatelessWidget {
                 // Botão "Clientes"
                 ElevatedButton(
                   onPressed: () {
-                    // Navegação para a tela clientes
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ClienteScreen()),
-                    );
+                    // Exibe o SnackBar e após um pequeno delay, navega para a tela Clientes
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Clientes pressionado')),
                     );
+                    Future.delayed(Duration(seconds: 1), () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ClienteScreen()),
+                      );
+                    });
                   },
                   child: Text('Clientes'),
                   style: ElevatedButton.styleFrom(
@@ -70,14 +78,16 @@ class TelaPrincipal extends StatelessWidget {
                 // Botão "Serviços"
                 ElevatedButton(
                   onPressed: () {
-                    // Navegação para a tela de serviços
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ServicosScreen()),
-                    );
+                    // Exibe o SnackBar e após um pequeno delay, navega para a tela de serviços
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Serviços pressionado')),
                     );
+                    Future.delayed(Duration(seconds: 1), () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ServicosScreen()),
+                      );
+                    });
                   },
                   child: Text('Serviços'),
                   style: ElevatedButton.styleFrom(
@@ -91,9 +101,16 @@ class TelaPrincipal extends StatelessWidget {
                 // Botão "Orçamento"
                 ElevatedButton(
                   onPressed: () {
+                    // Exibe o SnackBar e após um pequeno delay, navega para a tela de orçamentos
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Orçamento pressionado')),
                     );
+                    Future.delayed(Duration(seconds: 1), () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Orcamento()),
+                      );
+                    });
                   },
                   child: Text('Orçamento'),
                   style: ElevatedButton.styleFrom(
@@ -107,14 +124,16 @@ class TelaPrincipal extends StatelessWidget {
                 // Botão "Agenda"
                 ElevatedButton(
                   onPressed: () {
-                    // Navegação para a tela Agenda
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Agenda()),
-                    );
+                    // Exibe o SnackBar e após um pequeno delay, navega para a tela de agenda
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Agenda pressionado')),
                     );
+                    Future.delayed(Duration(seconds: 1), () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Agenda()),
+                      );
+                    });
                   },
                   child: Text('Agenda'),
                   style: ElevatedButton.styleFrom(
@@ -172,5 +191,3 @@ class TelaPrincipal extends StatelessWidget {
     );
   }
 }
-
-

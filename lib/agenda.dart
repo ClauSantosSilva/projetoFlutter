@@ -11,24 +11,55 @@ class _AgendaState extends State<Agenda> {
   late DateTime _selectedDay;
   late DateTime _focusedDay;
   TimeOfDay? _selectedTime;
-  TextEditingController _nomeController = TextEditingController(); // Controlador para o nome da cliente
+  TextEditingController _pesquisaClienteController = TextEditingController(); // Campo de pesquisa cliente
+  TextEditingController _telefoneClienteController = TextEditingController(); // Campo de telefone do cliente
+  TextEditingController _pesquisaServicoController = TextEditingController(); // Campo de pesquisa serviço
 
   List<Map<String, dynamic>> _agendamentos = []; // Lista de agendamentos
   int? _editingIndex; // Para saber qual agendamento estamos editando
   List<Map<String, dynamic>> _agendamentosDoDia = []; // Lista de agendamentos para o dia selecionado
+
+  // Dados carregados do banco
+  List<String> _clientes = [];
+  List<String> _servicos = [];
+  Map<String, String> _clientesComTelefone = {}; // Mapa de clientes com seus telefones
 
   @override
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
     _focusedDay = DateTime.now();
+
+    // Inicializar os agendamentos com algum valor fictício
+    _agendamentos.add({
+      'data': DateTime.now(),
+      'hora': TimeOfDay(hour: 14, minute: 30),
+      'nome_cliente': 'Cliente Teste',
+      'servico': 'Corte de cabelo',
+      'telefone_cliente': '123456789',
+    });
+
+    // Carregar os clientes e serviços do banco de dados
+    _carregarClientesEServicos();
+  }
+
+  // Função para carregar os clientes e serviços do banco
+  Future<void> _carregarClientesEServicos() async {
+    // Exemplo fictício de dados de clientes e serviços
+    setState(() {
+      _clientes = ['Cliente 1', 'Cliente 2', 'Cliente Teste'];
+      _servicos = ['Corte de cabelo', 'Manicure', 'Pedicure'];
+      _clientesComTelefone = {
+        'Cliente Teste': '123456789',
+        'Cliente 1': '987654321',
+        'Cliente 2': '564738291',
+      };
+    });
   }
 
   // Função para salvar ou editar o agendamento
-  void _salvarAgendamento() {
-    String nomeCliente = _nomeController.text;
-
-    if (_selectedTime == null || nomeCliente.isEmpty) {
+  void _salvarAgendamento(String nomeCliente, String nomeServico, String telefoneCliente) {
+    if (_selectedTime == null || nomeCliente.isEmpty || nomeServico.isEmpty || telefoneCliente.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Preencha todos os campos!')));
       return;
     }
@@ -39,7 +70,9 @@ class _AgendaState extends State<Agenda> {
         _agendamentos.add({
           'data': _selectedDay,
           'hora': _selectedTime!,
-          'nome': nomeCliente,
+          'nome_cliente': nomeCliente,
+          'servico': nomeServico,
+          'telefone_cliente': telefoneCliente,
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Agendamento salvo!')));
       });
@@ -49,17 +82,21 @@ class _AgendaState extends State<Agenda> {
         _agendamentos[_editingIndex!] = {
           'data': _selectedDay,
           'hora': _selectedTime!,
-          'nome': nomeCliente,
+          'nome_cliente': nomeCliente,
+          'servico': nomeServico,
+          'telefone_cliente': telefoneCliente,
         };
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Agendamento editado!')));
       });
     }
 
-    // Limpa o campo de nome após salvar ou editar
-    _nomeController.clear();
+    // Limpa os campos após salvar ou editar
     setState(() {
-      _editingIndex = null; // Reseta o índice de edição
       _selectedTime = null; // Limpa o tempo após salvar
+      _editingIndex = null; // Reseta o índice de edição
+      _pesquisaClienteController.clear();
+      _telefoneClienteController.clear();
+      _pesquisaServicoController.clear();
     });
 
     // Atualiza a lista de agendamentos do dia
@@ -71,8 +108,7 @@ class _AgendaState extends State<Agenda> {
     setState(() {
       _selectedDay = _agendamentos[index]['data'];
       _selectedTime = _agendamentos[index]['hora'];
-      _nomeController.text = _agendamentos[index]['nome'];
-      _editingIndex = index; // Define o índice do agendamento que está sendo editado
+      _editingIndex = index;
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Agendamento selecionado para edição!')));
   }
@@ -103,14 +139,41 @@ class _AgendaState extends State<Agenda> {
 
   // Função para formatar a data no formato brasileiro
   String _formatarData(DateTime date) {
-    return DateFormat('dd/MM/yyyy').format(date); // Formata a data como dd/MM/yyyy
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
+
+  // Função para formatar o horário
+  String _formatarHora(TimeOfDay time) {
+    return time.format(context); // Formata para o formato de hora (HH:mm)
   }
 
   // Função para atualizar os agendamentos do dia selecionado
   void _atualizarAgendamentosDoDia() {
     setState(() {
       _agendamentosDoDia = _agendamentos.where((agendamento) {
-        return isSameDay(agendamento['data'], _selectedDay); // Verifica se a data do agendamento é a mesma do dia selecionado
+        return isSameDay(agendamento['data'], _selectedDay);
+      }).toList();
+    });
+  }
+
+  // Função de pesquisa de cliente
+  void _pesquisarCliente() {
+    String query = _pesquisaClienteController.text.toLowerCase();
+    setState(() {
+      if (_clientesComTelefone.containsKey(query)) {
+        _telefoneClienteController.text = _clientesComTelefone[query]!;
+      } else {
+        _telefoneClienteController.clear(); // Limpa o telefone caso não encontre
+      }
+    });
+  }
+
+  // Função de pesquisa de serviço
+  void _pesquisarServico() {
+    String query = _pesquisaServicoController.text.toLowerCase();
+    setState(() {
+      _agendamentosDoDia = _agendamentos.where((agendamento) {
+        return agendamento['servico'].toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -120,153 +183,120 @@ class _AgendaState extends State<Agenda> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text("Agenda",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Roboto',
+        title: Text("Agenda"),
+        backgroundColor: Color(0xFF64B5F6),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.lightBlue[100]!],
           ),
         ),
-        backgroundColor: Colors.blue, // Título com fundo azul
-      ),
-      body: SingleChildScrollView( // Permite a rolagem na tela inteira
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.white, Colors.lightBlue[200]!],// Degradê azul
-            ),
-          ),
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Campo para o nome da cliente
+                // Campo de pesquisa de cliente
                 TextField(
-                  controller: _nomeController,
+                  controller: _pesquisaClienteController,
                   decoration: InputDecoration(
-                    labelText: 'Nome da Cliente',
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.8),
-                    border: OutlineInputBorder(),
+                    labelText: 'Pesquisar Cliente',
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.search),
+                      onPressed: _pesquisarCliente,
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
+                // Campo de telefone cliente
+                TextField(
+                  controller: _telefoneClienteController,
+                  decoration: InputDecoration(
+                    labelText: 'Telefone do Cliente',
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+                SizedBox(height: 20),
+                // Campo de pesquisa de serviço
+                TextField(
+                  controller: _pesquisaServicoController,
+                  decoration: InputDecoration(
+                    labelText: 'Pesquisar Serviço',
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.search),
+                      onPressed: _pesquisarServico,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Calendário
                 TableCalendar(
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.utc(2025, 12, 31),
                   focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) {
-                    return isSameDay(_selectedDay, day);
-                  },
+                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                   onDaySelected: (selectedDay, focusedDay) {
                     setState(() {
                       _selectedDay = selectedDay;
                       _focusedDay = focusedDay;
                     });
-
-                    // Atualiza a lista de agendamentos para o dia selecionado
                     _atualizarAgendamentosDoDia();
                   },
-                  calendarStyle: CalendarStyle(
-                    selectedDecoration: BoxDecoration(
-                      color: Colors.blue, // Cor de fundo para o dia selecionado
-                      shape: BoxShape.circle,
-                    ),
-                    todayDecoration: BoxDecoration(
-                      color: Colors.transparent, // Retira a cor amarela do dia atual
-                      shape: BoxShape.circle,
-                    ),
-                    weekendTextStyle: TextStyle(color: Colors.red), // Cor para os fins de semana
-                  ),
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleTextStyle: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white, // Título da legenda em branco
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue, // Fundo azul para a legenda
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10),
-                      ),
-                    ),
-                  ),
                 ),
                 SizedBox(height: 20),
-                // Exibe a data selecionada no formato brasileiro
-                Text(
-                  'Data Selecionada: ${_formatarData(_selectedDay)}', // Exibe a data formatada
-                  style: TextStyle(fontSize: 16, color: Colors.white), // Texto em branco
-                ),
-                SizedBox(height: 20),
-                // Botão para selecionar o horário
+                // Botão de hora
                 ElevatedButton(
                   onPressed: _selecionarHora,
-                  child: Text(_selectedTime == null
-                      ? 'Selecione a Hora'
-                      : 'Hora Selecionada: ${_selectedTime!.format(context)}'),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
-                  ),
+                  child: Text(_selectedTime == null ? 'Selecione a Hora' : 'Hora Selecionada: ${_formatarHora(_selectedTime!)}'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 ),
                 SizedBox(height: 20),
-                // Botão para salvar o agendamento
+                // Botão de salvar agendamento
                 ElevatedButton(
-                  onPressed: _salvarAgendamento,
-                  child: Text(_editingIndex == null ? 'Salvar Agendamento' : 'Salvar Alterações'),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.green,
-                  ),
+                  onPressed: () {
+                    String nomeCliente = _pesquisaClienteController.text.isEmpty ? 'Cliente não cadastrado' : _pesquisaClienteController.text;
+                    String nomeServico = _pesquisaServicoController.text.isEmpty ? 'Serviço não selecionado' : _pesquisaServicoController.text;
+                    String telefoneCliente = _telefoneClienteController.text.isEmpty ? 'Telefone não informado' : _telefoneClienteController.text;
+                    _salvarAgendamento(nomeCliente, nomeServico, telefoneCliente);
+                  },
+                  child: Text('Salvar Agenda'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
                 SizedBox(height: 20),
-                // Exibe os agendamentos do dia selecionado
-                _agendamentosDoDia.isEmpty
-                    ? Text(
-                  'Nenhum agendamento para este dia.',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                )
-                    : ListView.builder(
-                  shrinkWrap: true, // Permite rolar apenas a lista de agendamentos
-                  itemCount: _agendamentosDoDia.length,
-                  itemBuilder: (context, index) {
-                    final agendamento = _agendamentosDoDia[index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.all(10.0),
-                        title: Text(
-                          'Cliente: ${agendamento['nome']}',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        subtitle: Text(
-                          'Hora: ${agendamento['hora'].format(context)}',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Botão de editar
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editarAgendamento(index), // Passa o índice
+                // Exibição dos agendamentos com a barra de rolagem
+                _selectedDay == null || _agendamentosDoDia.isEmpty
+                    ? Text('Nenhum agendamento para este dia.')
+                    : Container(
+                  height: 300, // Ajuste a altura conforme necessário
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: _agendamentosDoDia.map((agendamento) {
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8.0),
+                          child: ListTile(
+                            title: Text('Cliente: ${agendamento['nome_cliente']}'),
+                            subtitle: Text('Serviço: ${agendamento['servico']}\nDia: ${_formatarData(agendamento['data'])}\nHora: ${_formatarHora(agendamento['hora'])}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _editarAgendamento(_agendamentos.indexOf(agendamento)),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => _excluirAgendamento(_agendamentos.indexOf(agendamento)),
+                                ),
+                              ],
                             ),
-                            // Botão de excluir
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _excluirAgendamento(index),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
               ],
             ),

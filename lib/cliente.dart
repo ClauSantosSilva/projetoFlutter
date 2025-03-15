@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(ClienteApp());  // Mudou de MyApp para ClienteApp
 }
 
 class Cliente {
@@ -12,7 +12,7 @@ class Cliente {
   Cliente({required this.nome, required this.telefone, required this.cpf});
 }
 
-class MyApp extends StatelessWidget {
+class ClienteApp extends StatelessWidget {  // Renomeado de MyApp para ClienteApp
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -82,14 +82,17 @@ class _ClienteScreenState extends State<ClienteScreen> {
     _cpfController.clear();
   }
 
-  // Função para pesquisar cliente por CPF
-  Cliente? _pesquisarClientePorCpf() {
-    String cpf = _pesquisaController.text;
-    Cliente? cliente = _clientes.firstWhere(
-          (cliente) => cliente.cpf == cpf,
-      orElse: () => Cliente(nome: '', telefone: '', cpf: ''),
-    );
-    return cliente.cpf.isEmpty ? null : cliente;
+  // Função para pesquisar cliente por telefone
+  Cliente? _pesquisarClientePorTelefone() {
+    String telefone = _pesquisaController.text;
+    try {
+      // Tentar encontrar o cliente pelo telefone
+      Cliente cliente = _clientes.firstWhere((cliente) => cliente.telefone == telefone);
+      return cliente; // Retorna o cliente encontrado
+    } catch (e) {
+      // Caso não seja encontrado, retorna null
+      return null;
+    }
   }
 
   // Função para editar cliente
@@ -124,7 +127,7 @@ class _ClienteScreenState extends State<ClienteScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.lightBlue[200]!],
+            colors: [Colors.white, Colors.lightBlue[100]!],
           ),
         ),
         child: Padding(
@@ -135,7 +138,7 @@ class _ClienteScreenState extends State<ClienteScreen> {
               TextField(
                 controller: _pesquisaController,
                 decoration: InputDecoration(
-                  labelText: 'Pesquisar por CPF',
+                  labelText: 'Pesquisar por Telefone',
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.8),
                   border: OutlineInputBorder(),
@@ -144,7 +147,7 @@ class _ClienteScreenState extends State<ClienteScreen> {
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
-                  Cliente? cliente = _pesquisarClientePorCpf();
+                  Cliente? cliente = _pesquisarClientePorTelefone();
                   if (cliente != null) {
                     _nomeController.text = cliente.nome;
                     _telefoneController.text = cliente.telefone;

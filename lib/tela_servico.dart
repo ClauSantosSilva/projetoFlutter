@@ -18,6 +18,15 @@ class _ServicosScreenState extends State<ServicosScreen> {
     String valor = _valorController.text;
 
     if (descricao.isNotEmpty && valor.isNotEmpty) {
+      // Verificar se o valor é um número válido
+      double? valorDouble = double.tryParse(valor);
+      if (valorDouble == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Digite um valor válido!')),
+        );
+        return;
+      }
+
       if (_editarIndex == null) {
         // Adiciona um novo serviço
         setState(() {
@@ -89,7 +98,7 @@ class _ServicosScreenState extends State<ServicosScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.lightBlue[200]!],
+            colors: [Colors.white, Colors.lightBlue[100]!],
           ),
         ),
         child: Padding(

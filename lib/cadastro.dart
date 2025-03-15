@@ -10,21 +10,36 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
 
+  // Função para validar o formato do email
+  bool _isValidEmail(String email) {
+    // Validação simples de formato de email
+    final RegExp emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return emailRegExp.hasMatch(email);
+  }
+
   void _cadastrar() {
     String nome = _nomeController.text;
     String email = _emailController.text;
     String senha = _senhaController.text;
 
-    if (nome.isNotEmpty && email.isNotEmpty && senha.isNotEmpty) {
+    if (nome.isEmpty || email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Preencha todos os campos')),
+      );
+    } else if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('E-mail inválido')),
+      );
+    } else if (senha.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres')),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Cadastro realizado com sucesso!')),
       );
       // Após o cadastro, podemos redirecionar para a tela de login ou outra tela
       Navigator.pop(context); // Volta para a tela de login
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Preencha todos os campos')),
-      );
     }
   }
 
@@ -37,10 +52,10 @@ class _CadastroScreenState extends State<CadastroScreen> {
         title: Text(
           "Cadastro",
           style: TextStyle(
-            color: Colors.white, // Cor do texto
-            fontSize: 24, // Tamanho da fonte
-            fontWeight: FontWeight.bold, // Negrito
-            fontFamily: 'Roboto', // Fonte personalizada (se disponível)
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Roboto',
           ),
         ),
       ),
@@ -49,7 +64,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.lightBlue[200]!], // Degradê do branco para o azul
+            colors: [Colors.white, Colors.lightBlue[100] ?? Colors.lightBlue],
           ),
         ),
         child: Padding(
@@ -62,15 +77,14 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 'assets/images/flower.jpg', // Caminho da imagem local
                 height: 250.0, // Ajuste o tamanho conforme necessário
               ),
-              SizedBox(height: 40), // Espaço entre a imagem e os botões
+              SizedBox(height: 40), // Espaço entre a imagem e os campos
               TextField(
                 controller: _nomeController,
                 decoration: InputDecoration(
                   hintText: 'Nome',
                   labelText: 'Nome',
-                  //filled: true,
-                  fillColor: Colors.white.withOpacity(0.8), // Fundo dos campos
-                  border: OutlineInputBorder(), // Adicionando borda para melhor aparência
+                  fillColor: Colors.white.withOpacity(0.8),
+                  border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(height: 10),
@@ -99,12 +113,22 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 onPressed: _cadastrar,
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue, // Cor do botão
+                  backgroundColor: Colors.blue,
                   padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),
                 child: Text(
                   'Cadastrar',
                   style: TextStyle(fontSize: 18),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Volta para a tela anterior (login)
+                },
+                child: Text(
+                  'Já tenho uma conta! Faça login',
+                  style: TextStyle(color: Colors.blue),
                 ),
               ),
             ],
